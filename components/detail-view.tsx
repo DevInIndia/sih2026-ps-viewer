@@ -126,15 +126,6 @@ export function DetailView({ record }: { record: ProblemStatement }) {
 
       <SectionLabel>Problem brief</SectionLabel>
       <Brief description={record.description} />
-
-      <details className="mt-10 border-t border-rule-soft pt-4">
-        <summary className="cursor-pointer font-mono text-[0.68rem] tracking-[0.1em] text-ink-3 uppercase hover:text-ink">
-          Raw scraped record
-        </summary>
-        <pre className="mt-3 overflow-x-auto rounded-md border border-rule-soft bg-surface-2 px-4 py-3.5 font-mono text-[0.72rem] leading-[1.55] whitespace-pre text-ink-2">
-          {JSON.stringify(record, null, 2)}
-        </pre>
-      </details>
     </article>
   );
 }

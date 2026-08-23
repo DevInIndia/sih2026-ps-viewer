@@ -143,30 +143,48 @@ body {
   border-radius: 3px;
 }
 
-/* Scrollbars that do not fight the dark theme. */
-@supports (scrollbar-width: thin) {
-  .pane {
+/* --------------------------------------------------------------- scrollbars
+
+   Two engines, two mechanisms, and they must not be mixed: Chromium supports
+   `scrollbar-width`/`scrollbar-color`, but the moment `scrollbar-color` is set
+   it switches to the native scrollbar and ignores every `::-webkit-scrollbar`
+   rule — which brings back the stepper arrows. So the standard properties are
+   scoped to engines that have no WebKit pseudo-elements (Firefox), and
+   Chromium/Safari are styled entirely through the pseudo-elements.
+
+   Applied globally rather than to `.pane`, so nested scrollers — overflowing
+   code blocks, tables, the theme list — match the panes.
+   -------------------------------------------------------------------------- */
+
+@supports not selector(::-webkit-scrollbar) {
+  * {
     scrollbar-width: thin;
     scrollbar-color: var(--rule) transparent;
   }
 }
 
-.pane::-webkit-scrollbar {
+::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
-.pane::-webkit-scrollbar-thumb {
-  background: var(--rule);
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--rule);
   border: 3px solid transparent;
   background-clip: content-box;
   border-radius: 999px;
 }
-.pane::-webkit-scrollbar-thumb:hover {
-  background: var(--ink-3);
-  background-clip: content-box;
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--ink-3);
 }
-.pane::-webkit-scrollbar-track {
-  background: transparent;
+/* The stepper arrows at each end of a classic Windows scrollbar. */
+::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 /* ==========================================================================

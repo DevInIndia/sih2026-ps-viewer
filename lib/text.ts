@@ -121,8 +121,8 @@ const DANGLING_TAG_RE = /<\s*\/?\s*[a-zA-Z][a-zA-Z0-9-]*(?:\s[^<>]*)?$/;
 /**
  * Undo the portal's double-escaped markup and return clean plain text.
  *
- * The stored JSON is left untouched by this — the "raw scraped record" panel in
- * the detail view still shows exactly what the scraper captured.
+ * This is a display-time transform only: the stored JSON keeps exactly what the
+ * scraper captured, so re-running the scrape stays comparable.
  */
 export function unmangle(input: string | null | undefined): string {
   if (!input) return "";

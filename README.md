@@ -46,7 +46,6 @@ and your shortlist persists between visits.
   sub-points and bullet lists, instead of one undifferentiated wall of text
 - Dataset and video links parsed out of the portal's markup and linkified,
   including bare hostnames like `tkdl.res.in`
-- The raw scraped record is always one click away, unmodified
 
 **Keeping track**
 
