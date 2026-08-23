@@ -1,0 +1,252 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   Tokens
+
+   Colour is defined once as plain CSS variables and flipped by the
+   `prefers-color-scheme` media query or an explicit `data-theme` on <html>.
+   Tailwind then reads those variables through `@theme inline`, so a utility
+   like `bg-surface` is automatically theme-correct and no `dark:` variant is
+   needed anywhere in the markup.
+   ========================================================================== */
+
+:root {
+  --ground: #eef1f6;
+  --surface: #ffffff;
+  --surface-2: #f5f7fb;
+  --surface-3: #e7ecf4;
+  --ink: #10182b;
+  --ink-2: #3d4a66;
+  --ink-3: #64708c;
+  --rule: #d3dae6;
+  --rule-soft: #e4e9f1;
+  --accent: #2947c8;
+  --accent-ink: #2440b8;
+  --accent-soft: #e5eafb;
+  --gold: #7a5100;
+  --gold-soft: #f7ebd2;
+  --gold-rule: #e2c68a;
+  --good: #0d6f57;
+  --good-soft: #dcf1ea;
+  --scrim: rgb(9 12 22 / 0.5);
+  --shadow-card: 0 1px 2px rgb(16 24 43 / 0.06), 0 8px 24px -12px rgb(16 24 43 / 0.18);
+  --shadow-pop: 0 12px 40px -12px rgb(16 24 43 / 0.28), 0 2px 8px -2px rgb(16 24 43 / 0.12);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0b0f1c;
+    --surface: #121829;
+    --surface-2: #182034;
+    --surface-3: #212b43;
+    --ink: #e8ecf7;
+    --ink-2: #aab4cd;
+    --ink-3: #8590ae;
+    --rule: #2a3454;
+    --rule-soft: #1d2539;
+    --accent: #8da4ff;
+    --accent-ink: #a9baff;
+    --accent-soft: #1c2447;
+    --gold: #efb755;
+    --gold-soft: #34290f;
+    --gold-rule: #6b5320;
+    --good: #4fd1a5;
+    --good-soft: #0f2b24;
+    --scrim: rgb(2 4 10 / 0.68);
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 28px -12px rgb(0 0 0 / 0.7);
+    --shadow-pop: 0 16px 48px -16px rgb(0 0 0 / 0.8), 0 2px 8px -2px rgb(0 0 0 / 0.5);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground: #0b0f1c;
+  --surface: #121829;
+  --surface-2: #182034;
+  --surface-3: #212b43;
+  --ink: #e8ecf7;
+  --ink-2: #aab4cd;
+  --ink-3: #8590ae;
+  --rule: #2a3454;
+  --rule-soft: #1d2539;
+  --accent: #8da4ff;
+  --accent-ink: #a9baff;
+  --accent-soft: #1c2447;
+  --gold: #efb755;
+  --gold-soft: #34290f;
+  --gold-rule: #6b5320;
+  --good: #4fd1a5;
+  --good-soft: #0f2b24;
+  --scrim: rgb(2 4 10 / 0.68);
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 28px -12px rgb(0 0 0 / 0.7);
+  --shadow-pop: 0 16px 48px -16px rgb(0 0 0 / 0.8), 0 2px 8px -2px rgb(0 0 0 / 0.5);
+  color-scheme: dark;
+}
+
+@theme {
+  /* The three-pane workspace needs more room than Tailwind's `lg`; below this
+     the rail becomes a drawer and the detail becomes a full-screen sheet. */
+  --breakpoint-wide: 1080px;
+}
+
+@theme inline {
+  --color-ground: var(--ground);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-rule: var(--rule);
+  --color-rule-soft: var(--rule-soft);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-gold-rule: var(--gold-rule);
+  --color-good: var(--good);
+  --color-good-soft: var(--good-soft);
+
+  --font-sans: var(--font-archivo), "Segoe UI", system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "Cascadia Mono", Consolas,
+    monospace;
+  --font-read: var(--font-newsreader), Georgia, "Times New Roman", serif;
+
+  --shadow-card: var(--shadow-card);
+  --shadow-pop: var(--shadow-pop);
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* Scrollbars that do not fight the dark theme. */
+@supports (scrollbar-width: thin) {
+  .pane {
+    scrollbar-width: thin;
+    scrollbar-color: var(--rule) transparent;
+  }
+}
+
+.pane::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.pane::-webkit-scrollbar-thumb {
+  background: var(--rule);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+}
+.pane::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-3);
+  background-clip: content-box;
+}
+.pane::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ==========================================================================
+   Utilities used often enough to earn a name
+   ========================================================================== */
+
+@utility micro {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Native form controls, themed. */
+input[type="search"],
+input[type="text"],
+select {
+  font: inherit;
+  color: inherit;
+}
+
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-3) 50%),
+    linear-gradient(135deg, var(--ink-3) 50%, transparent 50%);
+  background-position:
+    calc(100% - 16px) calc(50% + 1px),
+    calc(100% - 11px) calc(50% + 1px);
+  background-size:
+    5px 5px,
+    5px 5px;
+  background-repeat: no-repeat;
+}
+
+/* The prose body of a problem brief. */
+.brief p {
+  font-family: var(--font-read);
+  font-size: 1.045rem;
+  line-height: 1.7;
+  color: var(--ink-2);
+  white-space: pre-wrap;
+  text-wrap: pretty;
+  margin-bottom: 0.95rem;
+}
+.brief li {
+  font-family: var(--font-read);
+  font-size: 1.045rem;
+  line-height: 1.7;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .pane {
+    overflow: visible !important;
+    height: auto !important;
+  }
+}

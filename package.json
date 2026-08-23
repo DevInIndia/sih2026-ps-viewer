@@ -1,0 +1,31 @@
+{
+  "name": "sih2026-problem-statements",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A browser for the scraped Smart India Hackathon 2026 problem statements.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test:safety": "tsc lib/text.ts lib/safe-url.ts --outDir .next/safety --module commonjs --target es2022 --moduleResolution node --skipLibCheck && node scripts/safety-check.cjs"
+  },
+  "dependencies": {
+    "next": "16.3.2",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "server-only": "0.0.1",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "22.15.3",
+    "@types/react": "19.2.8",
+    "@types/react-dom": "19.2.4",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.8.3"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}
