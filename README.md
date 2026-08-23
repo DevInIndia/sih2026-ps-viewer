@@ -116,7 +116,6 @@ whole update path — Vercel rebuilds on its own.
 sih_scraper.py         scrapes sih.gov.in/sih2026PS → JSON / CSV / XLSX
 build_viewer.py        the original standalone HTML viewer (still works)
 sih2026_ps.json        the dataset — the app's single source of truth
-sih2026_ps.csv/.xlsx   the same data for spreadsheets
 
 app/
   (workspace)/         masthead, filter rail and results list, kept mounted
@@ -128,10 +127,14 @@ lib/                   data loading, validation, text normalisation, URL safety
 scripts/               safety regression checks
 ```
 
+Only `sih2026_ps.json` is committed, because the app builds from it. The CSV,
+the XLSX and the standalone HTML viewer all regenerate from it and are ignored —
+run `python sih_scraper.py` or `python build_viewer.py` if you want them.
+
 The descriptions are ~185 KB gzipped, so they are kept out of the initial
 payload and fetched in the background as `/search-index`. Until it arrives,
 search runs against metadata already in memory — the box is never dead. The home
-page is **41 KB gzipped**; the original single-file viewer was 721 KB.
+page is **42 KB gzipped**; the original single-file viewer was 721 KB.
 
 ## Safety
 

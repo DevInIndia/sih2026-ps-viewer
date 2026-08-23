@@ -41,5 +41,11 @@ __pycache__/
 .venv/
 venv/
 
-# scraper intermediates (large; regenerate with sih_scraper.py)
+# Scraper and viewer output. All of it regenerates from sih2026_ps.json, which
+# is committed because the app builds from it:
+#   python sih_scraper.py    → .csv, .xlsx, and the raw page cache
+#   python build_viewer.py   → sih2026_ps.html
 sih2026PS_raw.html
+sih2026_ps.csv
+sih2026_ps.xlsx
+sih2026_ps.html
