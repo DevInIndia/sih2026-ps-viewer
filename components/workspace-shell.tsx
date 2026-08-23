@@ -22,6 +22,7 @@ import {
 } from "@/components/icons";
 import { ResultList } from "@/components/result-list";
 import { ShortcutsDialog } from "@/components/shortcuts-dialog";
+import { SiteFooter } from "@/components/site-footer";
 import {
   ShortlistProvider,
   useShortlist,
@@ -604,6 +605,8 @@ function WorkspaceBody({
           {children}
         </main>
       </div>
+
+      <SiteFooter />
 
       {/* Drawer backdrop. */}
       <button
