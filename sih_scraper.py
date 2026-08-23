@@ -71,12 +71,42 @@ FIELDNAMES = [
 ]
 
 
+# Characters cp1252 produces from a UTF-8 continuation byte (0x80-0xBF). Bytes
+# 0x80-0x9F map to punctuation rather than to the matching code point, which is
+# why the mojibake looks like "Ã—" instead of something regular.
+_CONTINUATION = (
+    "-ÿ€‚ƒ„…†‡ˆ‰"
+    "Š‹ŒŽ‘’“”•–—"
+    "˜™š›œžŸ"
+)
+# A two-byte UTF-8 sequence (lead byte 0xC2/0xC3) misread as cp1252.
+MOJIBAKE_SEQ = re.compile(f"[ÂÃ][{_CONTINUATION}]")
+
+
+def _undo_misdecode(match):
+    """Re-encode one mojibake sequence as cp1252 and read it back as UTF-8."""
+    seq = match.group()
+    try:
+        return seq.encode("cp1252", "strict").decode("utf-8", "strict")
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        # Not a misdecode after all — leave the characters alone.
+        return seq
+
+
 def fix_text(text):
     """Repair mojibake and collapse stray whitespace."""
     if not text:
         return ""
     for bad, good in MOJIBAKE_FIX.items():
         text = text.replace(bad, good)
+    # The table above only covers sequences seen so far. This catches the rest
+    # of the same class generically: the portal stores text that was decoded as
+    # cp1252 once before being saved, so reversing that on each affected
+    # sequence recovers the original character. Applied per sequence rather than
+    # per string, because a field may also hold characters cp1252 cannot encode,
+    # which would make a whole-string round trip fail and silently repair
+    # nothing.
+    text = MOJIBAKE_SEQ.sub(_undo_misdecode, text)
     return re.sub(r"[ \t]+", " ", text).strip()
 
 
