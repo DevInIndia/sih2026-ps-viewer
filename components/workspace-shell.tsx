@@ -21,7 +21,7 @@ import {
   XIcon,
 } from "@/components/icons";
 import { ResultList } from "@/components/result-list";
-import { ShortcutsDialog } from "@/components/shortcuts-dialog";
+import { HelpDialog, type HelpSection } from "@/components/help-dialog";
 import { SiteFooter } from "@/components/site-footer";
 import {
   ShortlistProvider,
@@ -187,7 +187,8 @@ function WorkspaceBody({
 
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [railOpen, setRailOpen] = useState(false);
-  const [helpOpen, setHelpOpen] = useState(false);
+  /** Which help panel is showing, if any. */
+  const [help, setHelp] = useState<HelpSection | null>(null);
   /** Set once the reader picks a sort themselves; see `effectiveSort` below. */
   const [sortPinned, setSortPinned] = useState(false);
 
@@ -353,8 +354,8 @@ function WorkspaceBody({
           target.isContentEditable);
 
       if (event.key === "Escape") {
-        if (helpOpen) {
-          setHelpOpen(false);
+        if (help) {
+          setHelp(null);
         } else if (railOpen) {
           setRailOpen(false);
         } else if (
@@ -386,7 +387,7 @@ function WorkspaceBody({
       }
       if (event.key === "?") {
         event.preventDefault();
-        setHelpOpen((open) => !open);
+        setHelp((open) => (open ? null : "shortcuts"));
         return;
       }
       if (event.key === "s" && activePs) {
@@ -410,7 +411,7 @@ function WorkspaceBody({
   }, [
     activePs,
     detailOpen,
-    helpOpen,
+    help,
     openStatement,
     railOpen,
     router,
@@ -500,7 +501,7 @@ function WorkspaceBody({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setHelpOpen(true)}
+            onClick={() => setHelp("shortcuts")}
             className={cx(buttonClass, "hidden w-9 px-0 wide:inline-flex")}
             title="Keyboard shortcuts (?)"
             aria-label="Keyboard shortcuts"
@@ -570,7 +571,7 @@ function WorkspaceBody({
             sort={effectiveSort}
             setSort={setSort}
             hasQuery={terms.length > 0}
-            onShowSyntax={() => setHelpOpen(true)}
+            onShowSyntax={() => setHelp("syntax")}
           />
         </aside>
 
@@ -666,7 +667,7 @@ function WorkspaceBody({
         )}
       />
 
-      <ShortcutsDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
+      <HelpDialog section={help} onClose={() => setHelp(null)} />
     </div>
   );
 }
