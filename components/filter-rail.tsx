@@ -10,7 +10,7 @@ import {
   selectClass,
 } from "@/components/ui";
 import { cx } from "@/lib/cx";
-import { MAX_QUERY_LENGTH } from "@/lib/text";
+import { MAX_QUERY_LENGTH } from "@/lib/query";
 import {
   CATEGORIES,
   SORT_KEYS,
@@ -19,6 +19,7 @@ import {
   isSortKey,
   type Facet,
   type Filters,
+  type SortKey,
 } from "@/lib/types";
 
 export type FacetCounts = {
@@ -132,6 +133,10 @@ export function FilterRail({
   counts,
   total,
   searchRef,
+  sort,
+  setSort,
+  hasQuery,
+  onShowSyntax,
 }: {
   filters: Filters;
   update: (patch: Partial<Filters>) => void;
@@ -144,6 +149,11 @@ export function FilterRail({
   counts: FacetCounts;
   total: number;
   searchRef: React.Ref<HTMLInputElement>;
+  /** The sort actually in effect, which may be chosen for you — see the shell. */
+  sort: SortKey;
+  setSort: (sort: SortKey) => void;
+  hasQuery: boolean;
+  onShowSyntax: () => void;
 }) {
   const themeSet = new Set(filters.themes);
 
@@ -156,13 +166,27 @@ export function FilterRail({
 
   return (
     <div className="flex flex-col gap-6 px-4 pt-4 pb-16">
-      <Field label="Search">
+      <Field
+        label="Search"
+        action={
+          <button
+            type="button"
+            onClick={onShowSyntax}
+            className="font-mono text-[0.64rem] tracking-[0.08em] text-accent-ink uppercase underline underline-offset-[3px] hover:text-accent"
+          >
+            syntax
+          </button>
+        }
+      >
         <SearchBox
           value={filters.query}
           onChange={(query) => update({ query })}
           inputRef={searchRef}
           showHint
         />
+        <p className="px-0.5 font-mono text-[0.63rem] leading-relaxed text-ink-3">
+          {'"exact phrase" · -exclude · org:isro'}
+        </p>
       </Field>
 
       <Field label="Category">
@@ -292,16 +316,22 @@ export function FilterRail({
 
       <Field label="Sort">
         <select
-          value={filters.sort}
+          value={sort}
           aria-label="Sort results"
           onChange={(event) => {
             const next = event.target.value;
-            if (isSortKey(next)) update({ sort: next });
+            if (isSortKey(next)) setSort(next);
           }}
           className={selectClass}
         >
           {SORT_KEYS.map((key) => (
-            <option key={key} value={key}>
+            <option
+              key={key}
+              value={key}
+              // Relevance ranks against the query; with no query there is
+              // nothing to rank, so it would silently behave as PS order.
+              disabled={key === "relevance" && !hasQuery}
+            >
               {SORT_LABELS[key]}
             </option>
           ))}

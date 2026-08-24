@@ -30,20 +30,24 @@ import {
 import { ThemeToggle } from "@/components/theme-toggle";
 import { buttonClass } from "@/components/ui";
 import {
-  COMPARATORS,
+  buildRecordText,
   countBy,
   hasActiveFilters,
-  metaHaystack,
   passes,
+  scoreQuery,
+  sortItems,
   type MatchContext,
+  type RecordText,
 } from "@/lib/filter";
 import { cx } from "@/lib/cx";
-import { highlightPattern, tokenize } from "@/lib/text";
+import { highlightPattern, parseQuery } from "@/lib/query";
 import {
   EMPTY_FILTERS,
+  resolveSort,
   type Facet,
   type Filters,
   type ListItem,
+  type SortKey,
   type Summary,
 } from "@/lib/types";
 
@@ -184,6 +188,8 @@ function WorkspaceBody({
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [railOpen, setRailOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  /** Set once the reader picks a sort themselves; see `effectiveSort` below. */
+  const [sortPinned, setSortPinned] = useState(false);
 
   const searchRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -208,18 +214,43 @@ function WorkspaceBody({
     setFilters((prev) => ({ ...prev, ...patch }));
   }, []);
 
-  const reset = useCallback(() => setFilters(EMPTY_FILTERS), []);
+  const reset = useCallback(() => {
+    setFilters(EMPTY_FILTERS);
+    setSortPinned(false);
+  }, []);
+
+  const setSort = useCallback((sort: SortKey) => {
+    setSortPinned(true);
+    setFilters((prev) => ({ ...prev, sort }));
+  }, []);
 
   // Typing stays responsive: the list re-filters at a lower priority.
   const deferredQuery = useDeferredValue(filters.query);
-  const terms = useMemo(() => tokenize(deferredQuery), [deferredQuery]);
+  const parsed = useMemo(() => parseQuery(deferredQuery), [deferredQuery]);
+  const terms = parsed.terms;
   const pattern = useMemo(() => highlightPattern(terms), [terms]);
 
-  const metaText = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const item of listItems) map.set(item.ps, metaHaystack(item));
+  // Folding 226 records is cheap but not free, so it happens once per dataset
+  // and once more when the description index arrives — never per keystroke.
+  const text = useMemo(() => {
+    const map = new Map<string, RecordText>();
+    for (const item of listItems) {
+      map.set(item.ps, buildRecordText(item, fullText?.get(item.ps)));
+    }
     return map;
-  }, [listItems]);
+  }, [listItems, fullText]);
+
+  /**
+   * Sorting by relevance only means something while a query is active, so it is
+   * the default then and PS number is the default otherwise. Choosing a sort
+   * yourself pins it — the dropdown always shows what is actually in effect,
+   * rather than the app silently reordering behind a stale label.
+   */
+  const effectiveSort: SortKey = resolveSort(
+    filters.sort,
+    sortPinned,
+    terms.length > 0,
+  );
 
   const ctx = useMemo<MatchContext>(
     () => ({
@@ -227,18 +258,29 @@ function WorkspaceBody({
       terms,
       themeSet: new Set(filters.themes),
       shortlist: shortlist.items,
-      fullText,
-      metaText,
+      text,
     }),
-    [filters, deferredQuery, terms, shortlist.items, fullText, metaText],
+    [filters, deferredQuery, terms, shortlist.items, text],
   );
+
+  const scores = useMemo(() => {
+    if (effectiveSort !== "relevance" || !terms.length) return null;
+    const map = new Map<string, number>();
+    for (const item of listItems) {
+      const record = text.get(item.ps);
+      if (record) map.set(item.ps, scoreQuery(record, terms));
+    }
+    return map;
+  }, [effectiveSort, terms, listItems, text]);
 
   const visible = useMemo(
     () =>
-      listItems
-        .filter((item) => passes(item, ctx))
-        .sort(COMPARATORS[filters.sort]),
-    [listItems, ctx, filters.sort],
+      sortItems(
+        listItems.filter((item) => passes(item, ctx)),
+        effectiveSort,
+        scores,
+      ),
+    [listItems, ctx, effectiveSort, scores],
   );
 
   const counts = useMemo<FacetCounts>(
@@ -525,6 +567,10 @@ function WorkspaceBody({
             counts={counts}
             total={summary.total}
             searchRef={searchRef}
+            sort={effectiveSort}
+            setSort={setSort}
+            hasQuery={terms.length > 0}
+            onShowSyntax={() => setHelpOpen(true)}
           />
         </aside>
 

@@ -8,7 +8,10 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test:safety": "tsc lib/text.ts lib/safe-url.ts --outDir .next/safety --module commonjs --target es2022 --moduleResolution node --skipLibCheck && node scripts/safety-check.cjs"
+    "pretest": "tsc lib/text.ts lib/safe-url.ts lib/query.ts lib/filter.ts lib/types.ts --outDir .next/testbuild --module commonjs --target es2022 --moduleResolution node --skipLibCheck",
+    "test": "node scripts/safety-check.cjs && node scripts/filter-tests.cjs",
+    "test:safety": "npm run pretest && node scripts/safety-check.cjs",
+    "test:filters": "npm run pretest && node scripts/filter-tests.cjs"
   },
   "dependencies": {
     "next": "16.3.2",

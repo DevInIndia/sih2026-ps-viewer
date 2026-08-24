@@ -6,8 +6,9 @@
  * These cover the guarantees the UI depends on — that a hostile value in the
  * scraped dataset cannot become a link, a script, or a runaway regex.
  */
-const { unmangle, decodeEntities, toProse, tokenize, highlightPattern } = require("../.next/safety/text.js");
-const { safeHref, toSegments, toLinkItems } = require("../.next/safety/safe-url.js");
+const { unmangle, decodeEntities, toProse } = require("../.next/testbuild/text.js");
+const { parseQuery, highlightPattern } = require("../.next/testbuild/query.js");
+const { safeHref, toSegments, toLinkItems } = require("../.next/testbuild/safe-url.js");
 
 const rows = [];
 const check = (name, actual, expected) => {
@@ -45,12 +46,20 @@ check("bullet decoded", decodeEntities("&#8226;"), "\u2022");
 check("hex decoded", decodeEntities("&#x2014;"), "\u2014");
 
 // --- query handling ------------------------------------------------------
-check("terms capped at 8", tokenize("a b c d e f g h i j k").length, 8);
-check("term length capped", tokenize("x".repeat(200))[0].length, 64);
-check("regex metachars escaped", highlightPattern(tokenize(".*")).source, "(\\.\\*)");
-check("single chars ignored", highlightPattern(tokenize("a b")), null);
-check("catastrophic pattern is literal", highlightPattern(tokenize("(a+)+$")).test("aaaa"), false);
-check("literal match still works", highlightPattern(tokenize("(a+)+$")).test("x(a+)+$y"), true);
+// A query is user input compiled into a regex, so it is bounded and escaped.
+// Behavioural coverage of the same code lives in scripts/filter-tests.cjs.
+const hl = (q) => {
+  const p = highlightPattern(parseQuery(q).terms);
+  return p && new RegExp(p.source, p.flags);
+};
+check("terms capped", parseQuery("a b c d e f g h i j k l m n o").terms.length, 12);
+check("term length capped", parseQuery("x".repeat(300)).terms[0].value.length, 64);
+check("query length capped", parseQuery("y".repeat(500)).terms[0].value.length <= 64, true);
+check("regex metachars escaped", hl(".*").test("ordinary words"), false);
+check("metachars match literally", hl(".*").test("a literal .* here"), true);
+check("catastrophic pattern is literal", hl("(a+)+$").test("a".repeat(24)), false);
+check("literal match still works", hl("(a+)+$").test("x (a+)+$ y"), true);
+check("empty query builds no pattern", highlightPattern(parseQuery("").terms), null);
 
 // --- prose never yields markup ------------------------------------------
 const prose = toProse("Background:\n<script>alert(1)</script>\n\u2022 one\n\u2022 two");

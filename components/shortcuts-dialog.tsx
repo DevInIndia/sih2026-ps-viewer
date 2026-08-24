@@ -13,8 +13,17 @@ const SHORTCUTS: [keys: string[], description: string][] = [
   [["?"], "Show this list"],
 ];
 
+const SYNTAX: [example: string, description: string][] = [
+  ["drone mapping", "Both words must appear"],
+  ['"flash flood"', "Exact phrase"],
+  ["-blockchain", "Exclude a word"],
+  ["org:isro", "Match only the organisation"],
+  ["theme:health", "Match only the theme"],
+  ["cat:hardware", "Match only the category"],
+];
+
 /**
- * Keyboard help.
+ * Keyboard and search help.
  *
  * Uses the native `<dialog>` element so focus trapping, the backdrop and
  * Escape-to-close come from the platform rather than from hand-rolled
@@ -76,6 +85,32 @@ export function ShortcutsDialog({
             </dd>
           </div>
         ))}
+      </dl>
+
+      <h3 className="border-t border-rule-soft px-4 pt-3 pb-1 text-[0.95rem] font-semibold">
+        Search syntax
+      </h3>
+      <dl className="px-4 pt-1 pb-4">
+        {SYNTAX.map(([example, description]) => (
+          <div
+            key={example}
+            className="flex items-baseline justify-between gap-4 py-1.5"
+          >
+            <dt className="shrink-0">
+              <code className="rounded border border-rule bg-surface-2 px-1.5 py-0.5 font-mono text-[0.72rem] text-accent-ink">
+                {example}
+              </code>
+            </dt>
+            <dd className="text-right text-[0.8rem] text-ink-3">
+              {description}
+            </dd>
+          </div>
+        ))}
+        <p className="mt-2 text-[0.78rem] leading-relaxed text-ink-3">
+          Words match from the start of a word, so <code>drone</code> finds
+          &ldquo;drones&rdquo; but <code>rag</code> does not match
+          &ldquo;storage&rdquo;. Accents are ignored.
+        </p>
       </dl>
     </dialog>
   );
