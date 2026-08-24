@@ -38,12 +38,27 @@ export type MatchContext = {
   text: Map<string, RecordText>;
 };
 
+/**
+ * Index a PS number under both the whole id and its bare digits.
+ *
+ * "SIH26123" is a single word, so the word-start rule that makes "rag" stop
+ * matching "storage" also makes "26123" stop matching "SIH26123" — the digits
+ * sit mid-word, behind an "h". People read these numbers off the portal and
+ * type either form, so both are indexed rather than loosening the rule for
+ * every field. Prefix matching then covers partial entry: "2612" finds it too.
+ */
+function psTokens(psNumber: string): string {
+  const folded = fold(psNumber);
+  const digits = folded.replace(/^[a-z]+/, "");
+  return digits && digits !== folded ? `${folded} ${digits}` : folded;
+}
+
 /** Fold a `ListItem` once; the description is merged in separately. */
 export function buildRecordText(
   item: ListItem,
   description: string | undefined,
 ): RecordText {
-  const ps = fold(item.ps);
+  const ps = psTokens(item.ps);
   const title = fold(item.title);
   const org = fold(item.org);
   const dept = fold(item.department);

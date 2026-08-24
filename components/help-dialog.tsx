@@ -34,7 +34,7 @@ const SYNTAX: [example: string, description: string][] = [
   ["dept:space", "Match only the department"],
   ["theme:health", "Match only the theme"],
   ["cat:hardware", "Match only the category"],
-  ["ps:sih26045", "Jump to one statement"],
+  ["26045", "A PS number, with or without the SIH"],
 ];
 
 const TABS: [id: HelpSection, label: string][] = [

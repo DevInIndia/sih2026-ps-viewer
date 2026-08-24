@@ -30,7 +30,9 @@ export function Highlight({
   const re = new RegExp(pattern.source, pattern.flags);
 
   for (let m = re.exec(text); m !== null; m = re.exec(text)) {
-    const term = m[1];
+    // The pattern has one alternative per guard (words vs numbers), each with
+    // its own capture group, so take whichever one participated.
+    const term = m.slice(1).find((group) => group !== undefined);
     if (term === undefined) break;
 
     const start = m.index + m[0].length - term.length;

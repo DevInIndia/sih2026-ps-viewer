@@ -255,6 +255,35 @@ check(
   search("ps:sih26045"),
   ["SIH26045"],
 );
+
+describe("PS number entry");
+
+// The word-start rule that fixed acronym search initially broke this: "26123"
+// sits mid-word inside "SIH26123", so it matched nothing.
+check("bare digits find the statement", search("26123"), ["SIH26123"]);
+check("the full id still works", search("sih26123"), ["SIH26123"]);
+check("case does not matter", search("SIH26123"), ["SIH26123"]);
+check("scoped digits work", search("ps:26123"), ["SIH26123"]);
+check("scoped full id works", search("ps:sih26123"), ["SIH26123"]);
+ok(
+  "a digit prefix narrows progressively",
+  search("2612").length >= 1 && search("2612").every((p) => p.startsWith("SIH2612")),
+  search("2612").join(","),
+);
+ok(
+  "the shared prefix matches the whole set",
+  search("sih26").length === 226,
+  `${search("sih26").length}`,
+);
+check(
+  "digits that match nothing return nothing",
+  search("99999").length,
+  0,
+);
+ok(
+  "a PS hit outranks an incidental one",
+  scoreQuery(rec("SIH26123"), parseQuery("26123").terms) > 0,
+);
 ok(
   "scoped term ignores matches in other fields",
   search("title:isro").length < search("isro").length,
@@ -459,6 +488,11 @@ ok(
 );
 ok("highlight anchors to word starts", !hp("rag").test("storage"));
 ok("highlight matches what search matched", hp("rag").test("RAG-based"));
+ok("a numeric term highlights inside a PS number", hp("26123").test("SIH26123"));
+ok("…but not when it follows another digit", !hp("26").test("year 2026"));
+ok("…and still matches on its own", hp("26").test("SIH26001"));
+ok("mixed word and numeric terms both apply", hp("drone 26123").test("SIH26123"));
+ok("mixed terms keep the word guard", !hp("rag 26123").test("storage"));
 ok("negated terms are not highlighted", highlightPattern(parseQuery("-drone").terms) === null);
 
 /* --------------------------------------------------------------- report ---- */

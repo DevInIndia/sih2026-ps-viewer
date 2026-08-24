@@ -175,13 +175,34 @@ export function termPattern(term: QueryTerm, flags = ""): RegExp {
   return new RegExp(`(?:^|[^a-z0-9])(${body})`, flags);
 }
 
-/** Regex used to paint matches onto the original, unfolded text. */
+/**
+ * Regex used to paint matches onto the original, unfolded text.
+ *
+ * Numeric terms get a looser guard than words. A PS number is indexed as both
+ * "sih26123" and "26123" so that either can be searched, and the display text
+ * is the whole id — so "26123" has to be allowed to highlight after a letter,
+ * or a search that clearly matched would light up nothing. Digits still may not
+ * follow other digits, which keeps "26" out of the middle of "2026".
+ *
+ * The two guards cannot share one capture group, so each alternative carries
+ * its own; callers take whichever group matched.
+ */
 export function highlightPattern(terms: QueryTerm[]): RegExp | null {
-  const bodies = terms
+  const usable = terms
     .filter((t) => !t.negated && t.value.length > 0)
     .sort((a, b) => b.value.length - a.value.length)
-    .map((t) => escapeRegExp(t.value).replace(/\s+/g, "\\s+"));
+    .map((t) => ({
+      body: escapeRegExp(t.value).replace(/\s+/g, "\\s+"),
+      numeric: /^\d+$/.test(t.value),
+    }));
 
-  if (!bodies.length) return null;
-  return new RegExp(`(?:^|[^a-z0-9])(${bodies.join("|")})`, "gi");
+  const words = usable.filter((t) => !t.numeric).map((t) => t.body);
+  const numbers = usable.filter((t) => t.numeric).map((t) => t.body);
+
+  const alternatives: string[] = [];
+  if (words.length) alternatives.push(`(?:^|[^a-z0-9])(${words.join("|")})`);
+  if (numbers.length) alternatives.push(`(?:^|[^0-9])(${numbers.join("|")})`);
+
+  if (!alternatives.length) return null;
+  return new RegExp(alternatives.join("|"), "gi");
 }
