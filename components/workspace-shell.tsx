@@ -11,7 +11,6 @@ import {
   useState,
 } from "react";
 
-import { ExportShortlist } from "@/components/export-shortlist";
 import { FilterRail, SearchBox } from "@/components/filter-rail";
 import type { FacetCounts } from "@/components/filter-rail";
 import {
@@ -22,6 +21,7 @@ import {
 } from "@/components/icons";
 import { ResultList } from "@/components/result-list";
 import { HelpDialog, type HelpSection } from "@/components/help-dialog";
+import { ShortlistMenu } from "@/components/shortlist-menu";
 import { SiteFooter } from "@/components/site-footer";
 import {
   ShortlistProvider,
@@ -587,14 +587,13 @@ function WorkspaceBody({
                   ? `${summary.total} statements`
                   : `${visible.length} of ${summary.total} statements`}
               </span>
-              <span className="flex items-center gap-2">
-                {shortlist.items.size ? (
-                  <span className="micro">
-                    {shortlist.items.size} shortlisted
-                  </span>
-                ) : null}
-                <ExportShortlist items={listItems} />
-              </span>
+              <ShortlistMenu
+                items={listItems}
+                shortlistedOnly={filters.shortlistedOnly}
+                onToggleFilter={() =>
+                  update({ shortlistedOnly: !filters.shortlistedOnly })
+                }
+              />
             </div>
 
             {chips.length ? (
