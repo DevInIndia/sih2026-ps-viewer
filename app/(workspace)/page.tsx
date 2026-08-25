@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { DatabaseIcon } from "@/components/icons";
 import { JsonLd } from "@/components/json-ld";
 import { AUTHOR } from "@/lib/author";
-import { LIST_ITEMS, SUMMARY } from "@/lib/records";
+import { SUMMARY } from "@/lib/records";
 import { siteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -15,9 +15,12 @@ export default function WorkspaceHome() {
   const base = siteUrl();
 
   /**
-   * `WebSite` plus the author already named in the footer, and an `ItemList` of
-   * the statements the page genuinely lists — all 226 are in the rendered HTML,
-   * so the markup matches what a reader and a crawler both see.
+   * `WebSite`, plus the author already named in the footer.
+   *
+   * An `ItemList` of all 226 statements was tried here and removed: it added
+   * 24 KB gzipped to the home page to restate URLs that are already present as
+   * real anchors in the HTML and again in the sitemap. Nothing was discoverable
+   * only through it, so the weight bought nothing.
    */
   const website = {
     "@context": "https://schema.org",
@@ -35,24 +38,9 @@ export default function WorkspaceHome() {
     },
   };
 
-  const itemList = {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    name: "Smart India Hackathon 2026 problem statements",
-    numberOfItems: LIST_ITEMS.length,
-    itemListOrder: "https://schema.org/ItemListOrderAscending",
-    itemListElement: LIST_ITEMS.map((item, index) => ({
-      "@type": "ListItem",
-      position: index + 1,
-      name: `${item.ps} · ${item.title}`,
-      url: `${base}/ps/${item.ps}`,
-    })),
-  };
-
   return (
     <>
       <JsonLd data={website} />
-      <JsonLd data={itemList} />
 
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-8 py-16 text-center">
         <DatabaseIcon className="size-9 text-rule" />
