@@ -13,11 +13,18 @@ function Row({
   item,
   active,
   pattern,
+  asHeading,
 }: {
   item: ListItem;
   active: boolean;
   pattern: RegExp | null;
+  asHeading: boolean;
 }) {
+  // On the home page the list is the content, so each row title is a real
+  // heading under the page H1. Beside an open statement the same list is
+  // navigation, and 226 headings would bury that page's own outline.
+  const Title = asHeading ? "h2" : "span";
+
   return (
     <li
       data-ps={item.ps}
@@ -54,9 +61,9 @@ function Row({
           ) : null}
         </span>
 
-        <h3 className="mb-1 text-[0.9rem] leading-[1.34] font-semibold text-balance text-ink">
+        <Title className="mb-1 block text-[0.9rem] leading-[1.34] font-semibold text-balance text-ink">
           <Highlight text={item.title} pattern={pattern} />
-        </h3>
+        </Title>
 
         <span className="block text-[0.74rem] leading-[1.4] text-ink-3">
           <Highlight text={item.org} pattern={pattern} />
@@ -75,11 +82,14 @@ export function ResultList({
   activePs,
   pattern,
   onClearFilters,
+  rowsAreHeadings,
 }: {
   items: readonly ListItem[];
   activePs: string | null;
   pattern: RegExp | null;
   onClearFilters: () => void;
+  /** True when this list is the page's main content — see `Row`. */
+  rowsAreHeadings: boolean;
 }) {
   if (!items.length) {
     return (
@@ -109,6 +119,7 @@ export function ResultList({
           item={item}
           active={item.ps === activePs}
           pattern={pattern}
+          asHeading={rowsAreHeadings}
         />
       ))}
     </ul>

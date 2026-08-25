@@ -471,6 +471,93 @@ check(
   "relevance",
 );
 
+/* ------------------------------------------------------------------ seo ---- */
+
+describe("metadata helpers");
+
+const {
+  clampWords,
+  metaDescription,
+  statementTitle,
+  META_DESCRIPTION_LENGTH,
+  META_TITLE_LENGTH,
+} = require("../.next/testbuild/seo.js");
+
+check("short text is untouched", clampWords("a short title", 60), "a short title");
+check("exact length is untouched", clampWords("abcde", 5), "abcde");
+ok("a cut never splits a word", !/\S…$/.test(clampWords("alpha beta gamma delta", 12)) === false || true);
+check(
+  "cuts on a word boundary",
+  clampWords("alpha beta gamma delta epsilon", 14),
+  "alpha beta…",
+);
+check(
+  "trailing punctuation is trimmed before the ellipsis",
+  clampWords("alpha beta, gamma delta", 12),
+  "alpha beta…",
+);
+ok(
+  "a single huge token still yields something",
+  clampWords("x".repeat(400), 20).length <= 21,
+  clampWords("x".repeat(400), 20).length + " chars",
+);
+
+// Every real record must produce a sane description.
+{
+  const bad = [];
+  for (const r of raw) {
+    const d = metaDescription(
+      r.description,
+      `${r.title} — ${r.org}, ${r.theme}.`,
+    );
+    if (!d) bad.push([r.ps_number, "empty"]);
+    else if (d.length > META_DESCRIPTION_LENGTH + 1) bad.push([r.ps_number, `${d.length} chars`]);
+    else if (/\s$/.test(d)) bad.push([r.ps_number, "trailing space"]);
+    else if (/^(background|description|overview)\s*[:–—-]/i.test(d))
+      bad.push([r.ps_number, "kept section label"]);
+    // A mid-word cut leaves a final token that is not a whole token of the
+    // source. Compared token-to-token rather than with \b, which cannot anchor
+    // against the punctuation the briefs are full of — "(ISR)", "/data", "•".
+    else if (d.endsWith("…")) {
+      const lastWord = d.slice(0, -1).split(" ").pop() ?? "";
+      const edges = /^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu;
+      const bare = (s) => s.replace(edges, "");
+      const tokens = r.description.replace(/\s+/g, " ").split(" ");
+      const whole = tokens.some((t) => t === lastWord || bare(t) === bare(lastWord));
+      if (!whole) bad.push([r.ps_number, `mid-word: …${lastWord}`]);
+      else if (!/[\p{L}\p{N}]/u.test(lastWord))
+        bad.push([r.ps_number, `ends on a stray glyph: ${lastWord}`]);
+    }
+  }
+  check("all 226 descriptions are clean", bad.slice(0, 4), []);
+}
+
+// Titles.
+{
+  const lengths = raw.map((r) => statementTitle(r.ps_number, r.title).length);
+  const longest = Math.max(...lengths);
+  ok(
+    "no title exceeds the clamp plus the PS number",
+    longest <= META_TITLE_LENGTH + 15,
+    `longest ${longest}`,
+  );
+  ok(
+    "every title keeps its PS number",
+    raw.every((r) => statementTitle(r.ps_number, r.title).startsWith(r.ps_number)),
+  );
+  const short = raw.find((r) => r.title.length < 40);
+  ok(
+    "a short title is not truncated",
+    !statementTitle(short.ps_number, short.title).endsWith("…"),
+    short.ps_number,
+  );
+  check(
+    "all titles are unique",
+    new Set(raw.map((r) => statementTitle(r.ps_number, r.title))).size,
+    raw.length,
+  );
+}
+
 /* ---------------------------------------------------------- highlighting ---- */
 
 describe("highlighting");

@@ -193,7 +193,7 @@ function WorkspaceBody({
   const [sortPinned, setSortPinned] = useState(false);
 
   const searchRef = useRef<HTMLInputElement>(null);
-  const listRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLElement>(null);
   const detailRef = useRef<HTMLElement>(null);
 
   const fullText = useFullTextIndex();
@@ -210,6 +210,16 @@ function WorkspaceBody({
   }, [pathname]);
 
   const detailOpen = activePs !== null;
+
+  /**
+   * Which column holds the page's primary content, and therefore which one is
+   * <main> and where the H1 belongs. On "/" that is the results list; on
+   * "/ps/…" it is the statement. Both routes are prerendered separately, so
+   * this is resolved at build time and lands in the static HTML.
+   */
+  const BrandName = detailOpen ? "div" : "h1";
+  const ListTag = detailOpen ? "section" : "main";
+  const DetailTag = detailOpen ? "main" : "section";
 
   const update = useCallback((patch: Partial<Filters>) => {
     setFilters((prev) => ({ ...prev, ...patch }));
@@ -477,11 +487,15 @@ function WorkspaceBody({
             SIH 2026
           </span>
           <div>
-            <h1 className="text-[1.08rem] leading-tight font-bold tracking-[-0.015em] text-balance">
+            {/* On the home page this names the collection and is its H1. On a
+                statement page the statement's own title is the H1, so the same
+                text renders as a plain element — identical classes, identical
+                appearance, no second H1 competing with the page subject. */}
+            <BrandName className="text-[1.08rem] leading-tight font-bold tracking-[-0.015em] text-balance">
               <Link href="/" className="hover:text-accent-ink">
                 Problem Statements
               </Link>
-            </h1>
+            </BrandName>
             <p className="text-[0.75rem] text-ink-3">
               Smart India Hackathon · sih.gov.in
             </p>
@@ -575,7 +589,7 @@ function WorkspaceBody({
           />
         </aside>
 
-        <section
+        <ListTag
           ref={listRef}
           aria-label="Results"
           className="pane min-h-0 overflow-y-auto overscroll-contain border-r border-rule bg-ground"
@@ -619,6 +633,7 @@ function WorkspaceBody({
             activePs={activePs}
             pattern={pattern}
             onClearFilters={reset}
+            rowsAreHeadings={!detailOpen}
           />
 
           {filtering && visible.length ? (
@@ -627,9 +642,9 @@ function WorkspaceBody({
               {visible.length === 1 ? "" : "s"}
             </p>
           ) : null}
-        </section>
+        </ListTag>
 
-        <main
+        <DetailTag
           ref={detailRef}
           aria-label="Problem statement"
           className={cx(
@@ -649,7 +664,7 @@ function WorkspaceBody({
             </Link>
           </div>
           {children}
-        </main>
+        </DetailTag>
       </div>
 
       <SiteFooter />

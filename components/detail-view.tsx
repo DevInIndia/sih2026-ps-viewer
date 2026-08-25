@@ -73,9 +73,11 @@ export function DetailView({ record }: { record: ProblemStatement }) {
         <span className="micro tnum">{record.ps_number}</span>
       </div>
 
-      <h2 className="mb-1 text-[clamp(1.3rem,2.3vw,1.7rem)] leading-[1.22] font-bold tracking-[-0.02em] text-balance">
+      {/* The page's H1: the statement this page is about. Same classes as
+          before, so nothing moves. */}
+      <h1 className="mb-1 text-[clamp(1.3rem,2.3vw,1.7rem)] leading-[1.22] font-bold tracking-[-0.02em] text-balance">
         {record.title}
-      </h2>
+      </h1>
       <p className="mb-5 text-[0.92rem] text-ink-2">{record.org}</p>
 
       <div className="no-print mb-7 flex flex-wrap gap-2">

@@ -2,6 +2,11 @@ import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV === "development";
 
+/** Branch and pull-request builds on Vercel; production is unaffected. */
+const isPreviewDeployment =
+  process.env.VERCEL_ENV === "preview" ||
+  process.env.VERCEL_ENV === "development";
+
 /**
  * Content Security Policy.
  *
@@ -83,8 +88,27 @@ const nextConfig: NextConfig = {
             key: "Cache-Control",
             value: "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800",
           },
+          {
+            // A machine artifact, not a page. It stays crawlable — the client
+            // fetches it — but must not become a search result. A robots.txt
+            // Disallow would be the wrong tool: it would block the fetch and
+            // still permit the URL to be indexed without content.
+            key: "X-Robots-Tag",
+            value: "noindex",
+          },
         ],
       },
+      // Preview deployments must not compete with production for indexing.
+      ...(isPreviewDeployment
+        ? [
+            {
+              source: "/:path*",
+              headers: [
+                { key: "X-Robots-Tag", value: "noindex, nofollow" },
+              ],
+            },
+          ]
+        : []),
     ];
   },
 };

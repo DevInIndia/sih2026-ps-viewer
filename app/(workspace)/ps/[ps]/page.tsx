@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { DetailView } from "@/components/detail-view";
+import { JsonLd } from "@/components/json-ld";
 import { RECORDS, getRecord } from "@/lib/records";
-import { unmangle } from "@/lib/text";
+import { metaDescription, statementTitle } from "@/lib/seo";
+import { siteUrl } from "@/lib/site";
 
 type Params = { ps: string };
 
@@ -27,17 +29,20 @@ export async function generateMetadata({
   const record = getRecord(ps);
   if (!record) return { title: "Statement not found" };
 
-  const summary = unmangle(record.description).replace(/\s+/g, " ").slice(0, 200);
+  const title = statementTitle(record.ps_number, record.title);
+  const description = metaDescription(
+    record.description,
+    `${record.title} — ${record.org}, ${record.theme}.`,
+  );
 
   return {
-    title: `${record.ps_number} · ${record.title}`,
-    description:
-      summary || `${record.title} — ${record.org}, ${record.theme}.`,
+    title,
+    description,
     alternates: { canonical: `/ps/${record.ps_number}` },
     openGraph: {
       type: "article",
-      title: `${record.ps_number} · ${record.title}`,
-      description: summary || `${record.org} · ${record.theme}`,
+      title,
+      description,
       url: `/ps/${record.ps_number}`,
     },
   };
@@ -52,5 +57,38 @@ export default async function ProblemStatementPage({
   const record = getRecord(ps);
   if (!record) notFound();
 
-  return <DetailView record={record} />;
+  /**
+   * Describes exactly what the page shows, using only fields the portal
+   * published: the title, the brief, the PS number, the issuing organisation
+   * and the theme. No author, date, rating or price is claimed, because the
+   * dataset has none — and this site did not write the statement.
+   */
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    name: record.title,
+    identifier: record.ps_number,
+    description: metaDescription(
+      record.description,
+      `${record.title} — ${record.org}, ${record.theme}.`,
+    ),
+    url: `${siteUrl()}/ps/${record.ps_number}`,
+    inLanguage: "en",
+    ...(record.org
+      ? { publisher: { "@type": "Organization", name: record.org } }
+      : {}),
+    ...(record.theme ? { about: { "@type": "Thing", name: record.theme } } : {}),
+    isPartOf: {
+      "@type": "WebSite",
+      name: "SIH 2026 Problem Statements",
+      url: `${siteUrl()}/`,
+    },
+  };
+
+  return (
+    <>
+      <JsonLd data={jsonLd} />
+      <DetailView record={record} />
+    </>
+  );
 }

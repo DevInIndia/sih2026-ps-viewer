@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo, IBM_Plex_Mono, Newsreader } from "next/font/google";
 
+import { siteUrl } from "@/lib/site";
+
 import "./globals.css";
 
 /**
@@ -29,15 +31,15 @@ const newsreader = Newsreader({
   display: "swap",
 });
 
-function siteUrl(): string {
-  const explicit = process.env.NEXT_PUBLIC_SITE_URL;
-  if (explicit) return explicit.replace(/\/+$/, "");
-  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
-    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
-  }
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return "http://localhost:3000";
-}
+/**
+ * Vercel builds every branch and pull request at its own URL, serving content
+ * identical to production. Canonicals already point at the production domain,
+ * because `VERCEL_PROJECT_PRODUCTION_URL` is the production host even on a
+ * preview — this is the belt to that pair of braces.
+ */
+const isPreviewDeployment =
+  process.env.VERCEL_ENV === "preview" ||
+  process.env.VERCEL_ENV === "development";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
@@ -48,12 +50,6 @@ export const metadata: Metadata = {
   description:
     "Search, filter and shortlist every Smart India Hackathon 2026 problem statement — by theme, organisation, department and category.",
   applicationName: "SIH 2026 Problem Statements",
-  keywords: [
-    "Smart India Hackathon",
-    "SIH 2026",
-    "problem statements",
-    "hackathon",
-  ],
   openGraph: {
     type: "website",
     siteName: "SIH 2026 Problem Statements",
@@ -61,8 +57,12 @@ export const metadata: Metadata = {
     description:
       "Search, filter and shortlist every Smart India Hackathon 2026 problem statement.",
   },
-  twitter: { card: "summary_large_image" },
-  robots: { index: true, follow: true },
+  // `summary`, not `summary_large_image`: there is no site image to show, and
+  // claiming the large card renders an empty banner on every share.
+  twitter: { card: "summary" },
+  robots: isPreviewDeployment
+    ? { index: false, follow: false }
+    : { index: true, follow: true },
   formatDetection: { telephone: false, address: false, email: false },
 };
 
