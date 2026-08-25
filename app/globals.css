@@ -230,6 +230,21 @@ select {
   background-repeat: no-repeat;
 }
 
+/*
+ * Re-declares the serif alias inside the detail subtree.
+ *
+ * Newsreader is loaded by the detail route rather than the root layout, so
+ * `--font-newsreader` only exists on that subtree. `--font-read` is declared at
+ * `:root`, and a custom property resolves its own `var()` references where it is
+ * declared, then inherits the *computed* result — so at `:root` it resolved
+ * against a font that isn't there, went invalid, and `font-family` silently fell
+ * back to inheriting the sans. Re-declaring it on the element that carries the
+ * face is what makes the scoping work.
+ */
+.serif-scope {
+  --font-read: var(--font-newsreader), Georgia, "Times New Roman", serif;
+}
+
 /* The prose body of a problem brief. */
 .brief p {
   font-family: var(--font-read);

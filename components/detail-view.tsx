@@ -1,3 +1,5 @@
+import { Newsreader } from "next/font/google";
+
 import { Brief } from "@/components/brief";
 import { CopyButton } from "@/components/copy-button";
 import { CopyLinkButton } from "@/components/copy-link-button";
@@ -15,6 +17,25 @@ import type { ProblemStatement } from "@/lib/schema";
 import { unmangle } from "@/lib/text";
 
 const PORTAL_URL = "https://sih.gov.in/sih2026PS";
+
+/**
+ * The serif used for the problem brief, declared here rather than in the root
+ * layout.
+ *
+ * This module is only reachable from /ps/[ps], so Next preloads the face on
+ * statement pages and nowhere else. Declared globally it was 58 KB — the
+ * largest single font file — downloaded on the landing page, where it painted
+ * no characters at all.
+ *
+ * `--font-newsreader` therefore only exists inside this subtree; `--font-read`
+ * in globals.css falls through to Georgia elsewhere, which no other rule uses.
+ */
+const newsreader = Newsreader({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-newsreader",
+  display: "swap",
+});
 
 function Fact({
   label,
@@ -66,7 +87,13 @@ export function DetailView({ record }: { record: ProblemStatement }) {
   const contactText = unmangle(record.contact);
 
   return (
-    <article className="mx-auto max-w-[78ch] px-4 pt-5 pb-24 wide:px-8 wide:pt-8">
+    <article
+      className={cx(
+        newsreader.variable,
+        "serif-scope",
+        "mx-auto max-w-[78ch] px-4 pt-5 pb-24 wide:px-8 wide:pt-8",
+      )}
+    >
       <div className="mb-3 flex flex-wrap items-center gap-1.5">
         <Tag tone={toneForCategory(record.category)}>{record.category}</Tag>
         <Tag tone="theme">{record.theme}</Tag>
