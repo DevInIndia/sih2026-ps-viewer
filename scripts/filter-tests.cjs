@@ -71,6 +71,9 @@ const items = raw.map((r) => ({
   hasDataset: r.dataset_link.length > 0,
 }));
 
+/** The dataset grows when the portal publishes more; nothing below hardcodes it. */
+const TOTAL = items.length;
+
 const descriptions = new Map(
   raw.map((r) => [r.ps_number, fold(unmangle(r.description))]),
 );
@@ -212,9 +215,13 @@ describe("match semantics — regression on real data");
 const arCount = search("ar").length;
 const ragCount = search("rag").length;
 const evCount = search("ev").length;
-ok("'ar' no longer returns everything", arCount < 226, `${arCount} of 226`);
+ok("'ar' no longer returns everything", arCount < TOTAL, `${arCount} of ${TOTAL}`);
 ok("'rag' is now precise", ragCount <= 5, `${ragCount} results`);
-ok("'ev' no longer returns most of the set", evCount < 130, `${evCount} results`);
+ok(
+  "'ev' no longer returns most of the set",
+  evCount < TOTAL * 0.6,
+  `${evCount} of ${TOTAL}`,
+);
 ok("'drone' unaffected", search("drone").length >= 15, `${search("drone").length}`);
 ok("'health' unaffected", search("health").length >= 25, `${search("health").length}`);
 
@@ -272,7 +279,7 @@ ok(
 );
 ok(
   "the shared prefix matches the whole set",
-  search("sih26").length === 226,
+  search("sih26").length === TOTAL,
   `${search("sih26").length}`,
 );
 check(
@@ -295,7 +302,7 @@ ok(
 describe("structured filters");
 
 const all = items.map((i) => i.ps);
-check("no filters returns everything", search("").length, 226);
+check("no filters returns everything", search("").length, TOTAL);
 check(
   "category filter",
   search("", { category: "Hardware" }).length,
@@ -373,7 +380,7 @@ describe("facet counts");
   check(
     "category counts ignore the category filter itself",
     total,
-    226,
+    TOTAL,
   );
   check(
     "…so the other category is still reachable",
@@ -419,7 +426,11 @@ describe("sorting");
 {
   const sorted = sortItems([...items], "ps", null).map((i) => i.ps);
   check("ps sort is ascending", sorted[0], "SIH26001");
-  check("ps sort is numeric, not lexical", sorted[225], "SIH26226");
+  check(
+    "ps sort is numeric, not lexical",
+    sorted[TOTAL - 1],
+    items[TOTAL - 1].ps,
+  );
 }
 {
   const a = sortItems([...items], "title", null).map((i) => i.ps);
@@ -529,7 +540,7 @@ ok(
         bad.push([r.ps_number, `ends on a stray glyph: ${lastWord}`]);
     }
   }
-  check("all 226 descriptions are clean", bad.slice(0, 4), []);
+  check(`all ${TOTAL} descriptions are clean`, bad.slice(0, 4), []);
 }
 
 // Titles.
